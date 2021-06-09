@@ -274,7 +274,7 @@ router.put("/unlike/:postId", authMiddleware, async (req, res) => {
     await post.save();
 
     if (post.user.toString() !== userId) {
-      // another user is liking your post
+      // another user is unliking your post
       await removeLikeNotification(userId, postId, post.user.toString());
     }
 
