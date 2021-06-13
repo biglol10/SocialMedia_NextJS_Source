@@ -47,6 +47,9 @@ router.get("/", authMiddleware, async (req, res) => {
 
   const { userId } = req; // from authMiddleware
 
+  const { role } = await UserModel.findOne({ _id: userId }); // if root user show all posts
+  // console.log(role);
+
   try {
     // -- another(new) version
 
@@ -63,24 +66,40 @@ router.get("/", authMiddleware, async (req, res) => {
     // no need to use toString(), it will automatically work
     if (number === 1) {
       if (loggedUser.following.length > 0) {
-        posts = await PostModel.find({
-          user: {
-            $in: [
-              userId,
-              ...loggedUser.following.map((following) => following.user),
-            ],
-          },
-        })
-          .limit(size)
-          .sort({ createdAt: -1 })
-          .populate("user")
-          .populate("comments.user");
+        if (role === "root") {
+          posts = await PostModel.find()
+            .limit(size)
+            .sort({ createdAt: -1 })
+            .populate("user")
+            .populate("comments.user");
+        } else {
+          posts = await PostModel.find({
+            user: {
+              $in: [
+                userId,
+                ...loggedUser.following.map((following) => following.user),
+              ],
+            },
+          })
+            .limit(size)
+            .sort({ createdAt: -1 })
+            .populate("user")
+            .populate("comments.user");
+        }
       } else {
-        posts = await PostModel.find({ user: userId })
-          .limit(size)
-          .sort({ createdAt: -1 })
-          .populate("user")
-          .populate("comments.user");
+        if (role === "root") {
+          posts = await PostModel.find()
+            .limit(size)
+            .sort({ createdAt: -1 })
+            .populate("user")
+            .populate("comments.user");
+        } else {
+          posts = await PostModel.find({ user: userId })
+            .limit(size)
+            .sort({ createdAt: -1 })
+            .populate("user")
+            .populate("comments.user");
+        }
       }
     } else {
       const skips = size * (number - 1);
@@ -274,7 +293,7 @@ router.put("/unlike/:postId", authMiddleware, async (req, res) => {
     await post.save();
 
     if (post.user.toString() !== userId) {
-      // another user is unliking your post
+      // another user is liking your post
       await removeLikeNotification(userId, postId, post.user.toString());
     }
 
