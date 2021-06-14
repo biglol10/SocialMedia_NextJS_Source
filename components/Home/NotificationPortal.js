@@ -1,16 +1,16 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Segment, TransitionablePortal, Icon, Feed } from "semantic-ui-react";
 import newMsgSound from "../../utils/newMsgSound";
 import { useRouter } from "next/router";
 import calculateTime from "../../utils/calculateTime";
 
-function NotificationPopup({
+function NotificationPortal({
   newNotification,
   notificationPopup,
   showNotificationPopup,
 }) {
   const router = useRouter();
-  const { name, profilePicUrl, username, postId } = newNotification;
+  const { name, profilePicUrl, username, postId, type } = newNotification;
 
   return (
     <>
@@ -40,7 +40,7 @@ function NotificationPopup({
                   <Feed.User onClick={() => router.push(`/${username}`)}>
                     {name}
                   </Feed.User>{" "}
-                  liked your{" "}
+                  {type} your{" "}
                   <a onClick={() => router.push(`/post/${postId}`)}> post</a>
                   <Feed.Date>{calculateTime(Date.now())}</Feed.Date>
                 </Feed.Summary>
@@ -53,4 +53,4 @@ function NotificationPopup({
   );
 }
 
-export default NotificationPopup;
+export default NotificationPortal;

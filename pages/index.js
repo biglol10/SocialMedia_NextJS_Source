@@ -17,7 +17,7 @@ import io from "socket.io-client";
 import getUserInfo from "../utils/getUserInfo";
 import MessageNotificationModal from "../components/Home/MessageNotificationModal";
 import newMsgSound from "../utils/newMsgSound";
-import NotificationPortal from "../components/Home/NotificationPopup";
+import NotificationPortal from "../components/Home/NotificationPortal";
 
 // in pages folder index.js file automatically becomes your homepage
 function Index({ user, postsData, errorLoading }) {
@@ -96,8 +96,8 @@ function Index({ user, postsData, errorLoading }) {
     if (socket.current) {
       socket.current.on(
         "newNotificationReceived",
-        ({ name, profilePicUrl, username, postId }) => {
-          setNewNotification({ name, profilePicUrl, username, postId });
+        ({ name, profilePicUrl, username, postId, type }) => {
+          setNewNotification({ name, profilePicUrl, username, postId, type });
 
           showNotificationPopup(true);
         }

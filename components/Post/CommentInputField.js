@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Form } from "semantic-ui-react";
 import { postComment } from "../../utils/postActions";
 
-function CommentInputField({ postId, user, setComments }) {
+function CommentInputField({ postId, user, setComments, socket }) {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -13,6 +13,13 @@ function CommentInputField({ postId, user, setComments }) {
         e.preventDefault();
         setLoading(true);
         await postComment(postId, user, text, setComments, setText);
+        if (socket.current) {
+          socket.current.emit("commentedOn", {
+            postId,
+            user,
+            text,
+          });
+        }
 
         setLoading(false);
       }}

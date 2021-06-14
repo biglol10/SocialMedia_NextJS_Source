@@ -23,7 +23,10 @@ const {
   deleteMsg,
 } = require("./utilsServer/messageActions");
 
-const { likeOrUnlikePost } = require("./utilsServer/likeOrUnlikePost");
+const {
+  likeOrUnlikePost,
+  commentPost,
+} = require("./utilsServer/likeOrUnlikePost");
 
 // first parameter is event (string), 'connection' is a default event from socket.io, you should not use it yourself
 // this event is triggered by socket.current = io(baseUrl) in messages.js, when the socket makes initial connection
@@ -126,8 +129,33 @@ io.on("connection", (socket) => {
             profilePicUrl,
             username,
             postId,
+            type: "liked",
           });
         }
+      }
+    }
+  });
+
+  socket.on("commentedOn", async ({ postId, user, text }) => {
+    const { success, equal, postUser, newComment, error } = await commentPost(
+      postId,
+      user,
+      text
+    );
+
+    if (success) {
+      const receiverSocket = findConnectedUser(postUser);
+
+      const { name, profilePicUrl, username } = user;
+
+      if (receiverSocket && !equal) {
+        io.to(receiverSocket.socketId).emit("newNotificationReceived", {
+          name,
+          profilePicUrl,
+          username,
+          postId,
+          type: "commented on",
+        });
       }
     }
   });
