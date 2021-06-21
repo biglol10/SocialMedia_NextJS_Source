@@ -8,6 +8,9 @@ import "react-toastify/dist/ReactToastify.css";
 import "semantic-ui-css/semantic.min.css";
 import "cropperjs/dist/cropper.css";
 
+// FOR REDUX
+import { wrapper } from "../redux/store";
+
 // When you create _app.js you are overriding the defaults in index.js
 
 function MyApp({ Component, pageProps }) {
@@ -70,4 +73,4 @@ MyApp.getInitialProps = async ({ Component, ctx }) => {
   return { pageProps }; // so this pageProps will automatically be added to props of MyApp class
 };
 
-export default MyApp;
+export default wrapper.withRedux(MyApp);

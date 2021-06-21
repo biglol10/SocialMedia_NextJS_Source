@@ -12,6 +12,7 @@ function Followers({
   loggedUserFollowStats,
   setUserFollowStats,
   profileUserId,
+  socket,
 }) {
   const [followers, setFollowers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -33,6 +34,27 @@ function Followers({
     };
     getFollowers();
   }, []);
+
+  const followUnfollowUser = async (
+    userId,
+    toSetuserFollowStats,
+    fromUser,
+    type
+  ) => {
+    if (type === "unfollowed") {
+      await unfollowUser(userId, toSetuserFollowStats);
+    } else {
+      await followUser(userId, toSetuserFollowStats);
+    }
+    if (socket.current) {
+      socket.current.emit("userFollowUnfollow", {
+        userId,
+        toSetuserFollowStats,
+        fromUser,
+        type,
+      });
+    }
+  };
 
   return (
     <>
@@ -63,13 +85,17 @@ function Followers({
                         onClick={async () => {
                           setFollowLoading(true);
                           isFollowing
-                            ? await unfollowUser(
+                            ? await followUnfollowUser(
                                 profileFollower.user._id,
-                                setUserFollowStats
+                                setUserFollowStats,
+                                user,
+                                "unfollowed"
                               )
-                            : await followUser(
+                            : await followUnfollowUser(
                                 profileFollower.user._id,
-                                setUserFollowStats
+                                setUserFollowStats,
+                                user,
+                                "followed"
                               );
                           setFollowLoading(false);
                         }}

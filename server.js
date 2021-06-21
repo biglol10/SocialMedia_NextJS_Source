@@ -25,7 +25,7 @@ const {
 
 const {
   likeOrUnlikePost,
-  commentPost,
+  findUserPost,
 } = require("./utilsServer/likeOrUnlikePost");
 
 // first parameter is event (string), 'connection' is a default event from socket.io, you should not use it yourself
@@ -137,28 +137,40 @@ io.on("connection", (socket) => {
   });
 
   socket.on("commentedOn", async ({ postId, user, text }) => {
-    const { success, equal, postUser, newComment, error } = await commentPost(
-      postId,
-      user,
-      text
-    );
+    const { postUser } = await findUserPost(postId);
 
-    if (success) {
-      const receiverSocket = findConnectedUser(postUser);
+    const receiverSocket = findConnectedUser(postUser);
 
-      const { name, profilePicUrl, username } = user;
+    const { name, profilePicUrl, username } = user;
 
-      if (receiverSocket && !equal) {
+    if (receiverSocket) {
+      io.to(receiverSocket.socketId).emit("newNotificationReceived", {
+        name,
+        profilePicUrl,
+        username,
+        postId,
+        type: "commented on",
+      });
+    }
+  });
+
+  socket.on(
+    "userFollowUnfollow",
+    async ({ userId, toSetuserFollowStats, fromUser, type }) => {
+      const receiverSocket = findConnectedUser(userId);
+      const { name, profilePicUrl, username } = fromUser;
+      if (receiverSocket) {
+        console.log("receiverSocket is > ", receiverSocket.socketId);
         io.to(receiverSocket.socketId).emit("newNotificationReceived", {
           name,
           profilePicUrl,
           username,
-          postId,
-          type: "commented on",
+          postId: "",
+          type,
         });
       }
     }
-  });
+  );
 });
 
 nextApp.prepare().then(() => {

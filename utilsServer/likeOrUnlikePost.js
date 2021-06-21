@@ -61,44 +61,18 @@ const likeOrUnlikePost = async (postId, userId, like) => {
   }
 };
 
-// user commented on post
-const commentPost = async (postId, user, text) => {
+// user commented on post ( for Socket )
+const findUserPost = async (postId) => {
   try {
     const post = await PostModel.findById(postId);
     if (!post) return { error: "No Post Found" };
 
-    const newComment = {
-      _id: uuid(),
-      text,
-      user: user._id,
-      date: Date.now(),
+    return {
+      postUser: post.user.toString(),
     };
-
-    if (post.user.toString() !== user._id) {
-      await newCommentNotification(
-        postId,
-        newComment._id,
-        user._id,
-        post.user.toString(),
-        text
-      );
-      return {
-        success: true,
-        equal: false,
-        postUser: post.user.toString(),
-        newComment,
-      };
-    } else {
-      return {
-        success: true,
-        equal: true,
-        postUser: post.user.toString(),
-        newComment,
-      };
-    }
   } catch (error) {
     return { error: "Server Error" };
   }
 };
 
-module.exports = { likeOrUnlikePost, commentPost };
+module.exports = { likeOrUnlikePost, findUserPost };

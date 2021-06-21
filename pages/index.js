@@ -19,8 +19,15 @@ import MessageNotificationModal from "../components/Home/MessageNotificationModa
 import newMsgSound from "../utils/newMsgSound";
 import NotificationPortal from "../components/Home/NotificationPortal";
 
+////
+// FOR REDUX
+import { connect } from "react-redux";
+import { setInfo } from "../redux/actions/main";
+////
+
 // in pages folder index.js file automatically becomes your homepage
-function Index({ user, postsData, errorLoading }) {
+// userSocket = redux state, setInfo = redux action
+function Index({ user, postsData, errorLoading, userSocket, setInfo }) {
   const [posts, setPosts] = useState(postsData || []);
   const [showToastr, setShowToastr] = useState(false);
 
@@ -38,6 +45,7 @@ function Index({ user, postsData, errorLoading }) {
   useEffect(() => {
     if (!socket.current) {
       socket.current = io(baseUrl); // connecting to server by calling io with baseUrl
+      setInfo(socket.current); // redux
     }
 
     if (socket.current) {
@@ -67,6 +75,7 @@ function Index({ user, postsData, errorLoading }) {
       if (socket.current) {
         socket.current.emit("disconnect");
         socket.current.off();
+        // setInfo(null); // redux
       }
     };
   }, []);
@@ -182,4 +191,15 @@ Index.getInitialProps = async (ctx) => {
   }
 };
 
-export default Index;
+// mapStateToProps will bring the reducer state we want into scope
+const mapStateToProps = (state) => ({
+  userSocket: state.main,
+});
+
+// mapDispatch will bring the action we want to use into scope
+// This means every action must be mapped as dispatch if we wish to use it and any info we want to access must be mapped as state
+const mapDispatchToProps = {
+  setInfo: setInfo, // in reducer/actions/main
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Index);

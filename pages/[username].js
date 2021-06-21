@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
 import baseUrl from "../utils/baseUrl";
@@ -15,6 +15,8 @@ import Followers from "../components/Profile/Followers";
 import Following from "../components/Profile/Following";
 import UpdateProfile from "../components/Profile/UpdateProfile";
 import Settings from "../components/Profile/Settings";
+
+import io from "socket.io-client";
 
 // dynamic api routes => only for api folder inside pages folder
 function ProfilePage({
@@ -42,6 +44,25 @@ function ProfilePage({
   const [showToastr, setShowToastr] = useState(false);
 
   if (errorLoading) return <NoProfile />; // profile not found
+
+  const socket = useRef();
+
+  useEffect(() => {
+    if (!socket.current) {
+      socket.current = io(baseUrl); // connecting to server by calling io with baseUrl
+    }
+
+    if (socket.current) {
+      socket.current.emit("join", { userId: user._id });
+    }
+
+    return () => {
+      if (socket.current) {
+        socket.current.emit("disconnect");
+        socket.current.off();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const getPosts = async () => {
@@ -122,6 +143,7 @@ function ProfilePage({
                 loggedUserFollowStats={loggedUserFollowStats}
                 setUserFollowStats={setUserFollowStats}
                 profileUserId={profile.user._id}
+                socket={socket}
               />
             )}
 
@@ -131,6 +153,7 @@ function ProfilePage({
                 loggedUserFollowStats={loggedUserFollowStats}
                 setUserFollowStats={setUserFollowStats}
                 profileUserId={profile.user._id}
+                socket={socket}
               />
             )}
 
