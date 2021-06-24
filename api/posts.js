@@ -415,4 +415,26 @@ router.delete("/:postId/:commentId", authMiddleware, async (req, res) => {
   }
 });
 
+// UPDATE A POST
+router.post("/update", authMiddleware, async (req, res) => {
+  try {
+    const { userId } = req;
+    const { postId, picUrl, text } = req.body;
+    let postField = {};
+    postField.picUrl = picUrl;
+    postField.text = text;
+
+    await PostModel.findOneAndUpdate(
+      { _id: postId },
+      { $set: postField },
+      { new: true }
+    );
+
+    return res.status(200).send("Success");
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send("Server Error");
+  }
+});
+
 module.exports = router;

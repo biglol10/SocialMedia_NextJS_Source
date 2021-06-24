@@ -19,6 +19,9 @@ import LikesList from "./LikesList";
 import ImageModal from "./ImageModal";
 import NoImageModal from "./NoImageModal";
 
+// for post edit
+import PostModalChange from "./PostModalChange";
+
 function CardPost({ post, user, setPosts, setShowToastr, socket }) {
   const [likes, setLikes] = useState(post.likes);
 
@@ -30,6 +33,7 @@ function CardPost({ post, user, setPosts, setShowToastr, socket }) {
   const [error, setError] = useState(null);
 
   const [showModal, setShowModal] = useState(false);
+  const [showModelChange, setShowModalChange] = useState(false);
 
   const addPropsToModal = () => ({
     post,
@@ -59,6 +63,20 @@ function CardPost({ post, user, setPosts, setShowToastr, socket }) {
           </Modal.Content>
         </Modal>
       )}
+
+      {showModelChange && (
+        <Modal
+          open={showModelChange}
+          closeIcon
+          closeOnDimmerClick
+          onClose={() => setShowModalChange(false)}
+        >
+          <Modal.Content>
+            <PostModalChange {...addPropsToModal()} />
+          </Modal.Content>
+        </Modal>
+      )}
+
       <Segment basic>
         <Card color="teal" fluid>
           {post.picUrl && (
@@ -105,6 +123,19 @@ function CardPost({ post, user, setPosts, setShowToastr, socket }) {
                     }
                   />
                 </Popup>
+                <Popup
+                  position="top right"
+                  content="Change This Post"
+                  trigger={
+                    <Image
+                      src="/pencil.svg"
+                      style={{ cursor: "pointer", height: "26px", top: "4px" }}
+                      size="mini"
+                      floated="right"
+                      onClick={() => setShowModalChange(true)}
+                    />
+                  }
+                />
               </>
             )}
             <Card.Header>

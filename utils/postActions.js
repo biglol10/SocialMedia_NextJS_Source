@@ -3,6 +3,7 @@ import baseUrl from "./baseUrl";
 import catchErros from "./catchErrors";
 import cookie from "js-cookie";
 import catchErrors from "./catchErrors";
+import Router from "next/router";
 
 const Axios = axios.create({
   baseURL: `${baseUrl}/api/posts`,
@@ -76,5 +77,33 @@ export const deleteComment = async (postId, commentId, setComments) => {
     setComments((prev) => prev.filter((comment) => comment._id !== commentId));
   } catch (error) {
     alert(catchErrors(error));
+  }
+};
+
+export const postUpdate = async (
+  post,
+  setLoading,
+  setErrorMsg,
+  postPicUrl,
+  text
+) => {
+  try {
+    const { _id } = post;
+    const res = await Axios.post("/update", {
+      postId: _id,
+      picUrl: postPicUrl,
+      text,
+    });
+    // {data: "Success", status: 200, statusText: "OK", headers: {…}, config: {…}, …}
+    if (res.data === "Success") {
+      setLoading(false);
+      setErrorMsg("");
+      Router.reload();
+    } else {
+      throw "Error";
+    }
+  } catch (error) {
+    setErrorMsg("Error Updating Post");
+    setLoading(false);
   }
 };
