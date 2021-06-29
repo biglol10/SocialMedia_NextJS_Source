@@ -68,6 +68,47 @@ router.get("/posts/:username", authMiddleware, async (req, res) => {
   }
 });
 
+// GET POSTS OF USER WITH SCROLLING
+router.get("/postsByScroll/:username", authMiddleware, async (req, res) => {
+  const { username } = req.params;
+  const { pageNumber } = req.query;
+
+  const number = Number(pageNumber);
+  const size = 5;
+
+  try {
+    const user = await UserModel.findOne({
+      username: username.toLowerCase(),
+    });
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
+    let posts = [];
+
+    if (number === 1) {
+      posts = await PostModel.find({ user: user._id })
+        .limit(size)
+        .sort({ createdAt: -1 })
+        .populate("user")
+        .populate("comments.user");
+    } else {
+      const skips = size * (number - 1);
+      posts = await PostModel.find({ user: user._id })
+        .skip(skips)
+        .limit(size)
+        .sort({ createdAt: -1 })
+        .populate("user")
+        .populate("comments.user");
+    }
+
+    return res.json(posts);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send("Server Error");
+  }
+});
+
 // GET FOLLOWERS
 router.get("/followers/:userId", authMiddleware, async (req, res) => {
   const { userId } = req.params;

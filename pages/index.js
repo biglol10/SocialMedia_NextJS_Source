@@ -33,7 +33,7 @@ function Index({ user, postsData, errorLoading, userSocket, setInfo }) {
 
   const [hasMore, setHasMore] = useState(true); // if there is more post, fetch from backend
 
-  const [pageNumber, setPageNumber] = useState(2);
+  const [pageNumber, setPageNumber] = useState(2); // 1st page cuz there is -1 in back
 
   const socket = useRef();
   const [newMessageReceived, setNewMessageReceived] = useState(null);

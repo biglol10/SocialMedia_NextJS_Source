@@ -9,7 +9,10 @@ import { Grid } from "semantic-ui-react";
 import ProfileMenuTabs from "../components/Profile/ProfileMenuTabs";
 import ProfileHeader from "../components/Profile/ProfileHeader";
 import CardPost from "../components/Post/CardPost";
-import { PlaceHolderPosts } from "../components/Layout/PlaceHolderGroup";
+import {
+  PlaceHolderPosts,
+  EndMessage,
+} from "../components/Layout/PlaceHolderGroup";
 import { PostDeleteToastr } from "../components/Layout/Toastr";
 import Followers from "../components/Profile/Followers";
 import Following from "../components/Profile/Following";
@@ -17,6 +20,9 @@ import UpdateProfile from "../components/Profile/UpdateProfile";
 import Settings from "../components/Profile/Settings";
 
 import io from "socket.io-client";
+
+// for scroll post
+import InfiniteScroll from "react-infinite-scroll-component";
 
 // dynamic api routes => only for api folder inside pages folder
 function ProfilePage({
@@ -47,6 +53,10 @@ function ProfilePage({
 
   const socket = useRef();
 
+  // for infinite scroll
+  const [hasMore, setHasMore] = useState(true);
+  const [pageNumber, setPageNumber] = useState(1);
+
   useEffect(() => {
     if (!socket.current) {
       socket.current = io(baseUrl); // connecting to server by calling io with baseUrl
@@ -64,6 +74,27 @@ function ProfilePage({
     };
   }, []);
 
+  // useEffect(() => {
+  //   const getPosts = async () => {
+  //     setLoading(true);
+  //     try {
+  //       const { username } = router.query;
+  //       const token = cookie.get("token");
+
+  //       const res = await axios.get(
+  //         `${baseUrl}/api/profile/posts/${username}`,
+  //         { headers: { Authorization: token } }
+  //       );
+  //       // console.log(res.data);
+  //       setPosts(res.data);
+  //     } catch (error) {
+  //       alert(`Error Loading Posts`);
+  //     }
+  //     setLoading(false);
+  //   };
+  //   getPosts();
+  // }, [router.query.username]);
+
   useEffect(() => {
     const getPosts = async () => {
       setLoading(true);
@@ -72,11 +103,12 @@ function ProfilePage({
         const token = cookie.get("token");
 
         const res = await axios.get(
-          `${baseUrl}/api/profile/posts/${username}`,
-          { headers: { Authorization: token } }
+          `${baseUrl}/api/profile/postsByScroll/${username}`,
+          { headers: { Authorization: token }, params: { pageNumber } }
         );
-        console.log(res.data);
+        // console.log(res.data);
         setPosts(res.data);
+        setPageNumber((prev) => prev + 1);
       } catch (error) {
         alert(`Error Loading Posts`);
       }
@@ -89,7 +121,24 @@ function ProfilePage({
     showToastr && setTimeout(() => setShowToastr(false), 3000);
   }, [showToastr]);
 
-  const { username, pageNumber } = router.query; // from [username].js... localhost:3000/janedoe?pageNumber=2
+  const fetchDataOnScroll = async () => {
+    try {
+      const { username } = router.query;
+      const token = cookie.get("token");
+      const res = await axios.get(
+        `${baseUrl}/api/profile/postsByScroll/${username}`,
+        { headers: { Authorization: token }, params: { pageNumber } }
+      );
+
+      if (res.data.length === 0) setHasMore(false);
+      setPosts((prev) => [...prev, ...res.data]);
+      setPageNumber((prev) => prev + 1);
+    } catch (error) {
+      alert(`Error fetching Posts`);
+    }
+  };
+
+  // const { username, pageNumber } = router.query; // from [username].js... localhost:3000/janedoe?pageNumber=2
 
   return (
     <>
@@ -122,15 +171,23 @@ function ProfilePage({
                 {loading ? (
                   <PlaceHolderPosts />
                 ) : posts.length > 0 ? (
-                  posts.map((post) => (
-                    <CardPost
-                      key={post._id}
-                      post={post}
-                      user={user}
-                      setPosts={setPosts}
-                      setShowToastr={setShowToastr}
-                    />
-                  ))
+                  <InfiniteScroll
+                    hasMore={hasMore}
+                    next={fetchDataOnScroll}
+                    loader={<PlaceHolderPosts />}
+                    endMessage={<EndMessage />}
+                    dataLength={posts.length}
+                  >
+                    {posts.map((post) => (
+                      <CardPost
+                        key={post._id}
+                        post={post}
+                        user={user}
+                        setPosts={setPosts}
+                        setShowToastr={setShowToastr}
+                      />
+                    ))}
+                  </InfiniteScroll>
                 ) : (
                   <NoProfilePosts />
                 )}
