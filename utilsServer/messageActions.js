@@ -22,7 +22,7 @@ const loadMessages = async (userId, messagesWith) => {
   }
 };
 
-const sendMsg = async (userId, msgSendToUserId, msg) => {
+const sendMsg = async (userId, msgSendToUserId, msg, picUrl) => {
   try {
     // LOGGED IN USER (SENDER)
     const user = await ChatModel.findOne({ user: userId });
@@ -34,6 +34,7 @@ const sendMsg = async (userId, msgSendToUserId, msg) => {
       sender: userId,
       receiver: msgSendToUserId,
       msg,
+      picUrl,
       date: Date.now(),
     };
 

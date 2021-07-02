@@ -10,6 +10,9 @@ import {
   Comment,
   Grid,
   Icon,
+  Modal,
+  Image,
+  Button,
 } from "semantic-ui-react";
 import Chat from "../components/Chats/Chat";
 import ChatListSearch from "../components/Chats/ChatListSearch";
@@ -22,6 +25,8 @@ import getUserInfo from "../utils/getUserInfo";
 import newMsgSound from "../utils/newMsgSound";
 import Cookies from "js-cookie";
 import cookie from "js-cookie";
+
+import uploadPic from "../utils/uploadPicToCloudinary";
 
 const scrollDivToBottom = (divRev) => {
   divRev.current !== null &&
@@ -36,6 +41,7 @@ function Messages({ chatsData, user }) {
 
   const [messages, setMessages] = useState([]);
   const [bannerData, setBannerData] = useState({ name: "", profilePicUrl: "" });
+  const [messagesWithState, setMessagesWithState] = useState();
   // This ref is for persisting the state of query string in url throughout re-renders. This ref is the query string inside url
   const openChatId = useRef("");
 
@@ -48,6 +54,26 @@ function Messages({ chatsData, user }) {
   // 그래서 해당 방법을 지양하는 것 같습니다 :)
 
   const divRef = useRef();
+
+  // start: for image upload
+  const [showModal, setShowModal] = useState(false);
+  const [media, setMedia] = useState(null);
+  const [mediaPreview, setMediaPreview] = useState(null);
+  const [imgUploadLoading, setImgUploadLoading] = useState(false);
+
+  const messageImgUpload = async () => {
+    setImgUploadLoading(true);
+    let picUrl;
+    if (media !== null) {
+      picUrl = await uploadPic(media);
+      if (picUrl) {
+        sendMsg("", picUrl);
+      }
+    }
+    setImgUploadLoading(false);
+    setShowModal(false);
+  };
+  // end: for image upload
 
   // CONNECTION USEEFFECT
   useEffect(() => {
@@ -98,6 +124,7 @@ function Messages({ chatsData, user }) {
       socket.current.on("messagesLoaded", ({ chat }) => {
         // console.log(chat);
         setMessages(chat.messages);
+        setMessagesWithState(chat.messagesWith);
         setBannerData({
           name: chat.messagesWith.name,
           profilePicUrl: chat.messagesWith.profilePicUrl,
@@ -120,12 +147,13 @@ function Messages({ chatsData, user }) {
     }
   }, [router.query.message]);
 
-  const sendMsg = (msg) => {
+  const sendMsg = (msg, picUrl = "") => {
     if (socket.current) {
       socket.current.emit("sendNewMsg", {
         userId: user._id,
         msgSendToUserId: openChatId.current,
-        msg,
+        msg: picUrl ? "[picture]" : msg,
+        picUrl,
       });
     }
   };
@@ -247,6 +275,38 @@ function Messages({ chatsData, user }) {
 
   return (
     <>
+      {/* Modal for Image Upload */}
+      <Modal
+        open={showModal}
+        closeIcon
+        closeOnDimmerClick
+        onClose={() => setShowModal(false)}
+        size="mini"
+      >
+        <Header icon="picture" content="Upload Image" />
+        <Modal.Content>
+          <Image src={mediaPreview} size="big" />
+        </Modal.Content>
+        <Modal.Actions>
+          <Button inverted color="red" onClick={() => setShowModal(false)}>
+            <Icon name="remove" /> Cancel
+          </Button>
+          <Button
+            disabled={imgUploadLoading}
+            inverted
+            color="violet"
+            onClick={messageImgUpload}
+          >
+            {imgUploadLoading ? (
+              <Icon name="spinner" loading />
+            ) : (
+              <Icon name="checkmark" />
+            )}
+            Upload
+          </Button>
+        </Modal.Actions>
+      </Modal>
+
       <Segment padded basic size="large" style={{ marginTop: "5px" }}>
         <Header
           icon="home"
@@ -307,6 +367,7 @@ function Messages({ chatsData, user }) {
                                   message={message}
                                   user={user}
                                   deleteMsg={deleteMsg}
+                                  messagesWithState={messagesWithState}
                                   // setMessages={setMessages}
                                   // messagesWith={openChatId.current} // not using router.query.messages because when the component re-renders the value resets automatically
                                 />
@@ -315,7 +376,13 @@ function Messages({ chatsData, user }) {
                           )}
                         </>
                       </div>
-                      <MessageInputField sendMsg={sendMsg} />
+                      <MessageInputField
+                        sendMsg={sendMsg}
+                        uploadPic={uploadPic}
+                        setMedia={setMedia}
+                        setMediaPreview={setMediaPreview}
+                        setShowModal={setShowModal}
+                      />
                     </>
                   )}
                 </Grid.Column>

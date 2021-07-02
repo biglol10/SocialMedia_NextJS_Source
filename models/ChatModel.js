@@ -10,8 +10,13 @@ const ChatSchema = new Schema({
       messages: [
         {
           msg: { type: String, required: true },
-          sender: { type: Schema.Types.ObjectId, ref: "User" },
-          receiver: { type: Schema.Types.ObjectId, ref: "User" },
+          sender: { type: Schema.Types.ObjectId, ref: "User", required: true },
+          receiver: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+          },
+          picUrl: { type: String },
           date: { type: Date },
         },
       ],

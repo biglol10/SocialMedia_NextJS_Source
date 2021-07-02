@@ -68,8 +68,13 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("sendNewMsg", async ({ userId, msgSendToUserId, msg }) => {
-    const { newMsg, error } = await sendMsg(userId, msgSendToUserId, msg);
+  socket.on("sendNewMsg", async ({ userId, msgSendToUserId, msg, picUrl }) => {
+    const { newMsg, error } = await sendMsg(
+      userId,
+      msgSendToUserId,
+      msg,
+      picUrl
+    );
     const receiverSocket = findConnectedUser(msgSendToUserId); // this is the socket whom we want to send the message
 
     // user is online, if he is there

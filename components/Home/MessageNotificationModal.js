@@ -54,7 +54,16 @@ function MessageNotificationModal({
               />
             </div>
 
-            <div className="otherBubble other">{newMessageReceived.msg}</div>
+            <div className="otherBubble other">
+              {newMessageReceived.picUrl ? (
+                <img
+                  src={newMessageReceived.picUrl}
+                  style={{ height: "45px", width: "45px" }}
+                />
+              ) : (
+                newMessageReceived.msg
+              )}
+            </div>
 
             <span className="other">
               {calculateTime(newMessageReceived.date)}
